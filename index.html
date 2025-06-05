@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Toko Online Dira</title>
+<style>
+  :root {
+    --primary-color: #2a9d8f;
+    --secondary-color: #264653;
+    --accent-color: #e76f51;
+    --background-color: #f4f4f9;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin:0;
+    background: var(--background-color);
+    font-family: var(--font-family);
+    color: var(--secondary-color);
+    overflow-x: hidden;
+  }
+  header {
+    background: var(--primary-color);
+    padding: 1rem 2rem;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  header h1 {
+    font-size: 1.8rem;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+  }
+  .cart {
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+  .cart-icon {
+    width: 28px;
+    height: 28px;
+    fill: white;
+  }
+  .cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--accent-color);
+    color: white;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 50%;
+    user-select: none;
+  }
+
+  main {
+    max-width: 1200px;
+    margin: 2rem auto 4rem auto;
+    padding: 0 1rem;
+  }
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+    gap: 1.5rem;
+  }
+  .product-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    position: relative;
+  }
+  .product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 18px rgb(0 0 0 / 0.15);
+  }
+  .product-img {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    margin-bottom: 1rem;
+  }
+  .product-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 0 0 0.4rem 0;
+    text-align: center;
+  }
+  .product-price {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+  }
+  button.add-to-cart {
+    background: var(--primary-color);
+    border: none;
+    color: white;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+  }
+  button.add-to-cart:hover {
+    background: var(--accent-color);
+  }
+
+  /* Animation bouncing effect for product image flying to cart */
+  .fly-to-cart {
+    position: fixed;
+    z-index: 1500;
+    pointer-events: none;
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.7s;
+    will-change: transform, opacity;
+    border-radius: 8px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+  }
+
+  /* Payment Section */
+  .checkout-section {
+    max-width: 500px;
+    margin: 3rem auto;
+    background: white;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgb(0 0 0 / 0.12);
+    display: none;
+    flex-direction: column;
+  }
+  .checkout-section.active {
+    display: flex;
+  }
+  .checkout-section h2 {
+    margin-top: 0;
+    color: var(--secondary-color);
+    text-align: center;
+  }
+  .payment-options {
+    margin: 1rem 0 2rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+  .payment-option {
+    flex: 1 1 120px;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 700;
+    user-select: none;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
+  }
+
+  .checkout-btns {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 1rem;
+  }
+  .checkout-btns button {
+    background: var(--accent-color);
+    border: none;
+    color: white;
+    padding: 0.7rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    flex: 1 1 45%;
+    margin: 0 0.3rem;
+    transition: background-color 0.3s ease;
+  }
+  .checkout-btns button:hover {
+    background: var(--primary-color);
+  }
+
+  /* Page transition animation */
+  .page {
+    opacity: 1;
+    transition: opacity 0.6s ease;
+  }
+  .page.fade-out {
+    opacity: 0;
+  }
+
+  /* Fade in elements when scrolling */
+  .fade-in-element {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .fade-in-element.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 1rem 2rem;
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+    border-top: 1px solid #ccc;
+    margin-top: 5rem;
+  }
+
+</style>
+</head>
+<body>
+<header>
+  <h1>Toko Onlien Dirat</h1>
+  <div class="cart" id="cart">
+    <svg class="cart-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m5-9v9m4-9v9m1-18h-6a2 2 0 00-2 2v2h10v-2a2 2 0 00-2-2z"/></svg>
+    <span class="cart-count" id="cart-count">0</span>
+  </div>
+</header>
+
+<main>
+  <section id="products" class="page">
+    <div class="products-grid" id="products-grid">
+      <!-- Products will be injected by JS -->
+    </div>
+  </section>
+
+  <section id="checkout" class="checkout-section">
+    <h2>Checkout Pesanan Anda</h2>
+    <div id="order-summary"></div>
+    <h3>Pilih Metode Pembayaran</h3>
+    <div class="payment-options">
+      <div class="payment-option">Dana</div>
+      <div class="payment-option">OVO</div>
+      <div class="payment-option">Gopay</div>
+      <div class="payment-option">QRIS</div>
+      <div class="payment-option">Transfer Bank</div>
+    </div>
+    <h3>Lanjutkan dengan checkout via:</h3>
+    <div class="checkout-btns">
+      <button id="btn-wa">WhatsApp</button>
+      <button id="btn-tg">Telegram</button>
+    </div>
+    <button id="btn-back" style="margin-top: 20px; background: var(--secondary-color);">Kembali ke Produk</button>
+  </section>
+</main>
+
+<footer>
+  &copy; 2024 Toko Onlien Dira - Semua hak dilindungi
+</footer>
+
+<script>
+  // Product data sample
+  const products = [
+    {
+      id: 1,
+      name: 'Susu Full Cream 1L',
+      price: 15000,
+      img: 'https://cdn.pixabay.com/photo/2016/06/06/20/12/milk-1433389_1280.jpg'
+    },
+    {
+      id: 2,
+      name: 'Susu Skim 1L',
+      price: 14000,
+      img: 'https://cdn.pixabay.com/photo/2016/06/24/19/45/milk-1473430_1280.jpg'
+    },
+    {
+      id: 3,
+      name: 'Susu Kedelai 1L',
+      price: 13000,
+      img: 'https://cdn.pixabay.com/photo/2014/04/05/11/41/soy-milk-316365_1280.jpg'
+    },
+    {
+      id: 4,
+      name: 'Susu Coklat 1L',
+      price: 17000,
+      img: 'https://cdn.pixabay.com/photo/2017/02/15/11/00/chocolate-milk-2061772_1280.jpg'
+    },
+    {
+      id: 5,
+      name: 'Susu Almond 1L',
+      price: 22000,
+      img: 'https://cdn.pixabay.com/photo/2017/09/01/21/41/almond-2701617_1280.jpg'
+    }
+  ];
+
+  // Cart state
+  let cart = {};
+
+  // Format price to Rupiah
+  function formatRupiah(num) {
+    return 'Rp ' + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  // Render products grid
+  function renderProducts() {
+    const grid = document.getElementById('products-grid');
+    grid.innerHTML = '';
+    products.forEach(product => {
+      const card = document.createElement('div');
+      card.classList.add('product-card', 'fade-in-element');
+      card.innerHTML = `
+        <img src="${product.img}" alt="${product.name}" class="product-img" data-id="${product.id}"/>
+        <h3 class="product-name">${product.name}</h3>
+        <div class="product-price">${formatRupiah(product.price)}</div>
+        <button class="add-to-cart" data-id="${product.id}">Tambah ke Keranjang</button>
+      `;
+      grid.appendChild(card);
+    });
+    observeFadeInElements();
+  }
+
+  // Animate elements on scroll (fade/slide in)
+  function observeFadeInElements() {
+    const elements = document.querySelectorAll('.fade-in-element');
+    const options = {
+      root: null,
+      threshold: 0.1,
+      rootMargin: "0px"
+    };
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, options);
+    elements.forEach(el => observer.observe(el));
+  }
+
+  // Animate product flying to cart
+  function animateFlyToCart(imgElem) {
+    const cartIcon = document.getElementById('cart');
+    const imgRect = imgElem.getBoundingClientRect();
+    const cartRect = cartIcon.getBoundingClientRect();
+
+    const flyImg = imgElem.cloneNode(true);
+    flyImg.classList.add('fly-to-cart');
+    flyImg.style.top = imgRect.top + 'px';
+    flyImg.style.left = imgRect.left + 'px';
+    flyImg.style.width = imgRect.width + 'px';
+    flyImg.style.height = imgRect.height + 'px';
+
+    document.body.appendChild(flyImg);
+
+    const deltaX = cartRect.left + cartRect.width / 2 - (imgRect.left + imgRect.width / 2);
+    const deltaY = cartRect.top + cartRect.height / 2 - (imgRect.top + imgRect.height / 2);
+
+    flyImg.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.2)`;
+    flyImg.style.opacity = '0.6';
+
+    flyImg.addEventListener('transitionend', () => {
+      flyImg.remove();
+    });
+  }
+
+  // Update cart count badge
+  function updateCartCount() {
+    const countElem = document.getElementById('cart-count');
+    let count = 0;
+    Object.values(cart).forEach(qty => count += qty);
+    countElem.textContent = count;
+  }
+
+  // Add product to cart
+  function addToCart(productId, imgElem) {
+    if(cart[productId]) {
+      cart[productId]++;
+    } else {
+      cart[productId] = 1;
+    }
+    updateCartCount();
+    animateFlyToCart(imgElem);
+  }
+
+  // Show checkout section with order summary and options
+  function showCheckout() {
+    const productSection = document.getElementById('products');
+    const checkoutSection = document.getElementById('checkout');
+    productSection.classList.add('fade-out');
+    setTimeout(() => {
+      productSection.style.display = 'none';
+      checkoutSection.style.display = 'flex';
+      checkoutSection.classList.add('active');
+      checkoutSection.classList.remove('fade-out');
+      renderOrderSummary();
+    }, 600);
+  }
+
+  // Back to products list from checkout
+  function backToProducts() {
+    const productSection = document.getElementById('products');
+    const checkoutSection = document.getElementById('checkout');
+    checkoutSection.classList.add('fade-out');
+    setTimeout(() => {
+      checkoutSection.style.display = 'none';
+      checkoutSection.classList.remove('active', 'fade-out');
+      productSection.style.display = 'block';
+      productSection.classList.remove('fade-out');
+    }, 600);
+  }
+
+  // Render order summary in checkout
+  function renderOrderSummary() {
+    const container = document.getElementById('order-summary');
+    if(Object.keys(cart).length === 0) {
+      container.innerHTML = '<p>Keranjang kosong. Silakan tambahkan produk terlebih dahulu.</p>';
+      return;
+    }
+    let summaryHtml = '<ul style="list-style:none; padding:0;">';
+    let total = 0;
+    for(const id in cart) {
+      const qty = cart[id];
+      const product = products.find(p => p.id == id);
+      if(product) {
+        const subtotal = product.price * qty;
+        total += subtotal;
+        summaryHtml += `<li style="margin-bottom: 0.7rem;"><strong>${product.name}</strong> x ${qty} = <span style="color: var(--accent-color);">${formatRupiah(subtotal)}</span></li>`;
+      }
+    }
+    summaryHtml += `</ul><hr>`;
+    summaryHtml += `<p style="text-align:right; font-weight:700; font-size:1.1rem;">Total: <span style="color: var(--accent-color);">${formatRupiah(total)}</span></p>`;
+    container.innerHTML = summaryHtml;
+  }
+
+  // Create message for WhatsApp/Telegram checkout
+  function createOrderMessage() {
+    if(Object.keys(cart).length === 0) return "Keranjang belanja Anda kosong.";
+    let message = 'Halo! Saya ingin memesan produk dari Toko Online Dira:%0A';
+    let total = 0;
+    for(const id in cart) {
+      const qty = cart[id];
+      const product = products.find(p => p.id == id);
+      if(product) {
+        const subtotal = product.price * qty;
+        total += subtotal;
+        message += `- ${product.name} x${qty}: Rp${subtotal.toLocaleString('id-ID')}%0A`;
+      }
+    }
+    message += `Total: Rp${total.toLocaleString('id-ID')}%0A`;
+    message += 'Metode pembayaran: ___________________%0A';
+    message += 'Mohon konfirmasi lebih lanjut. Terima kasih!';
+    return message;
+  }
+
+  // Event listeners setup
+  function setupEventListeners() {
+    // Add to cart buttons
+    document.getElementById('products-grid').addEventListener('click', e => {
+      if(e.target.classList.contains('add-to-cart')) {
+        const productId = e.target.dataset.id;
+        const imgElem = e.target.closest('.product-card').querySelector('.product-img');
+        addToCart(productId, imgElem);
+      }
+    });
+
+    // Cart click => open checkout if cart not empty
+    document.getElementById('cart').addEventListener('click', () => {
+      if(Object.keys(cart).length === 0){
+        alert('Keranjang Anda masih kosong, silakan tambahkan produk terlebih dahulu.');
+      } else {
+        showCheckout();
+      }
+    });
+
+    // Back button in checkout
+    document.getElementById('btn-back').addEventListener('click', backToProducts);
+
+    // WhatsApp checkout
+    document.getElementById('btn-wa').addEventListener('click', () => {
+      const message = createOrderMessage();
+      const waUrl = `https://wa.me/6287784555835=${message}`;
+      window.open(waUrl, '_blank');
+    });
+
+    // Telegram checkout
+    document.getElementById('btn-tg').addEventListener('click', () => {
+      const message = createOrderMessage();
+      const tgUrl = `https://t.me/Dedexzs=${message}`;
+      window.open(tgUrl, '_blank');
+    });
+  }
+
+  // Initialize
+  function init() {
+    renderProducts();
+    setupEventListeners();
+  }
+
+  init();
+
+</script>
+</body>
+</html>
+
